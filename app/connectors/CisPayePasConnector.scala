@@ -112,6 +112,26 @@ class CisPayePasConnector @Inject()(http: HttpClientV2,
       }
   }
 
+  def getCisPenaltyAllowed(getPenaltyAllowedRequest: GetPenaltyAllowedRequest)
+                             (implicit hc: HeaderCarrier): Future[GetPenaltyAllowedResponse] = {
+    http.post(url"$base/cis/penalties/access-allowed")
+      .withBody(Json.toJson(getPenaltyAllowedRequest))
+      .execute[Either[UpstreamErrorResponse, GetPenaltyAllowedResponse]]
+      .flatMap {
+        case Right(resp) =>
+          logger.debug(s"[CisPayePasConnector][getCisPenaltyAllowed] request: $getPenaltyAllowedRequest, response: $resp")
+          logger.info(s"[CisPayePasConnector][getCisPenaltyAllowed] Get success with request: $getPenaltyAllowedRequest")
+          Future.successful(
+            resp)
+        case Left(error) =>
+          logResponse(error, "[CisPayePasConnector][getCisPenaltyAllowed]")
+          Future.failed(error)
+      }
+      .recover {
+        case e => throw logResponse(e, "[CisPayePasConnector][getCisPenaltyAllowed]")
+      }
+  }
+
   // PAYE
   def createPayeAppeal(createPayeAppealRequest: CreateAppealRequest)(implicit hc: HeaderCarrier): Future[CreateAppealResponse] = {
     http.post(url"$base/paye/appeal")
@@ -167,6 +187,26 @@ class CisPayePasConnector @Inject()(http: HttpClientV2,
       }
       .recover {
         case e => throw logResponse(e, "[CisPayePasConnector][getPayeAppealablePenalty]")
+      }
+  }
+
+  def getPayePenaltyAllowed(getPenaltyAllowedRequest: GetPenaltyAllowedRequest)
+                          (implicit hc: HeaderCarrier): Future[GetPenaltyAllowedResponse] = {
+    http.post(url"$base/paye/penalties/access-allowed")
+      .withBody(Json.toJson(getPenaltyAllowedRequest))
+      .execute[Either[UpstreamErrorResponse, GetPenaltyAllowedResponse]]
+      .flatMap {
+        case Right(resp) =>
+          logger.debug(s"[CisPayePasConnector][getPayePenaltyAllowed] request: $getPenaltyAllowedRequest, response: $resp")
+          logger.info(s"[CisPayePasConnector][getPayePenaltyAllowed] Get success with request: $getPenaltyAllowedRequest")
+          Future.successful(
+            resp)
+        case Left(error) =>
+          logResponse(error, "[CisPayePasConnector][getPayePenaltyAllowed]")
+          Future.failed(error)
+      }
+      .recover {
+        case e => throw logResponse(e, "[CisPayePasConnector][getPayePenaltyAllowed]")
       }
   }
 

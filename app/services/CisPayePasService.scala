@@ -67,6 +67,12 @@ class CisPayePasService @Inject()(backendConnector: CisPayePasConnector)(implici
     backendConnector.getCisTaxpayer(getCisTaxpayerRequest)
   }
 
+  def getCisPenaltyAllowed(getPenaltyAllowedRequest: GetPenaltyAllowedRequest)
+                             (implicit hc: HeaderCarrier): Future[GetPenaltyAllowedResponse] = {
+    logger.debug("[CisPayePasService][getCisPenaltyAllowed] Getting Cis Penalty Allowed")
+    backendConnector.getCisPenaltyAllowed(getPenaltyAllowedRequest)
+  }
+
   // PAYE
   def createPayeAppeal(penaltyId: Long)
                      (implicit hc: HeaderCarrier): Future[CreateAppealResponse] = {
@@ -99,5 +105,11 @@ class CisPayePasService @Inject()(backendConnector: CisPayePasConnector)(implici
     logger.debug("[CisPayePasService][getPayeAppealablePenaly] Getting Paye Appealable Penalty")
     backendConnector.getPayeAppealablePenalty(getPayeAppealablePenaltyRequest)
   }
-  
+
+
+  def getPayePenaltyAllowed(getPenaltyAllowedRequest: GetPenaltyAllowedRequest)
+                          (implicit hc: HeaderCarrier): Future[GetPenaltyAllowedResponse] = {
+    logger.debug("[CisPayePasService][getPayePenaltyAllowed] Getting Paye Penalty Allowed")
+    backendConnector.getPayePenaltyAllowed(getPenaltyAllowedRequest)
+  }
 }

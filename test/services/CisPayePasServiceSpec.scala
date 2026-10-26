@@ -251,6 +251,40 @@ class CisPayePasServiceSpec extends SpecBase with MockitoSugar with BeforeAndAft
         verify(mockBackendConnector, times(1)).getCisTaxpayer(eqTo(secondRequest))(any())
       }
     }
+
+    "getCisPenaltyAllowed" - {
+
+      val testRequest = GetPenaltyAllowedRequest(
+        districtNumber = 1L,
+        employerReference = "HDZ",
+        uniqueId = 1L
+      )
+
+      val testResponse = GetPenaltyAllowedResponse(
+        allowed = true
+      )
+
+      "must return GetPenaltyAllowedResponse when successful" in {
+        when(mockBackendConnector.getCisPenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier]))
+          .thenReturn(Future.successful(testResponse))
+
+        val result = service.getCisPenaltyAllowed(testRequest).futureValue
+
+        result mustBe testResponse
+        verify(mockBackendConnector, times(1)).getCisPenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier])
+      }
+
+      "must propagate connector failure" in {
+        when(mockBackendConnector.getCisPenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier]))
+          .thenReturn(Future.failed(new RuntimeException("Connector failed")))
+
+        whenReady(service.getCisPenaltyAllowed(testRequest).failed) { exception =>
+          exception mustBe a[RuntimeException]
+          exception.getMessage mustBe "Connector failed"
+        }
+        verify(mockBackendConnector, times(1)).getCisPenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier])
+      }
+    }
   }
 
   // PAYE
@@ -375,6 +409,40 @@ class CisPayePasServiceSpec extends SpecBase with MockitoSugar with BeforeAndAft
         exception.getMessage mustBe "Connector failed"
       }
       verify(mockBackendConnector, times(1)).getPayeAppealablePenalty(eqTo(getPayeAppealablePenaltyRequest))(any())
+    }
+  }
+
+  "getPayePenaltyAllowed" - {
+
+    val testRequest = GetPenaltyAllowedRequest(
+      districtNumber = 1L,
+      employerReference = "HDZ",
+      uniqueId = 1L
+    )
+
+    val testResponse = GetPenaltyAllowedResponse(
+      allowed = true
+    )
+
+    "must return GetPenaltyAllowedResponse when successful" in {
+      when(mockBackendConnector.getPayePenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier]))
+        .thenReturn(Future.successful(testResponse))
+
+      val result = service.getPayePenaltyAllowed(testRequest).futureValue
+
+      result mustBe testResponse
+      verify(mockBackendConnector, times(1)).getPayePenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier])
+    }
+
+    "must propagate connector failure" in {
+      when(mockBackendConnector.getPayePenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier]))
+        .thenReturn(Future.failed(new RuntimeException("Connector failed")))
+
+      whenReady(service.getPayePenaltyAllowed(testRequest).failed) { exception =>
+        exception mustBe a[RuntimeException]
+        exception.getMessage mustBe "Connector failed"
+      }
+      verify(mockBackendConnector, times(1)).getPayePenaltyAllowed(eqTo(testRequest))(any[HeaderCarrier])
     }
   }
 }

@@ -372,6 +372,75 @@ class CisPayePasConnectorISpec
       }
     }
 
+    "getCisPenaltyAllowed()" - {
+
+      val getCisPenaltyAllowedRequestJson = Json.obj(
+        "districtNumber" -> 1L,
+        "employerReference" -> "HDZ",
+        "uniqueId" -> 1L
+      )
+      val getCisPenaltyAllowedResponseJson: JsValue = Json.obj(
+        "allowed" -> true
+      )
+
+      val getCisPenaltyAllowedPath = "/cis-paye-penalties-and-appeals/cis/penalties/access-allowed"
+
+      "must return GetCisTaxpayerResponse when the stub returns 200 OK" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).withRequestBody(equalToJson(getCisPenaltyAllowedRequestJson.toString())).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getCisPenaltyAllowedResponseJson.toString())))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        val result = connector.getCisPenaltyAllowed(request).futureValue
+        result.allowed mustBe true
+        server.verify(postRequestedFor(urlPathEqualTo(getCisPenaltyAllowedPath)).withRequestBody(equalToJson(getCisPenaltyAllowedRequestJson.toString())))
+      }
+
+      "must throw UpstreamErrorResponse with status 404 when stub returns 404 Not Found" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(404).withHeader("Content-Type", "application/json").withBody("""{"message":"CIS taxpayer not found"}""")))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        val result = connector.getCisPenaltyAllowed(request).failed.futureValue
+        result mustBe an[UpstreamErrorResponse]
+        result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 404
+        result.getMessage must include("CIS taxpayer not found")
+      }
+
+      "must throw UpstreamErrorResponse when stub returns 400 Bad Request" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(400).withHeader("Content-Type", "application/json").withBody("""{"message":"Invalid payload","errors":{}}""")))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        val result = connector.getCisPenaltyAllowed(request).failed.futureValue
+        result mustBe an[UpstreamErrorResponse]
+        result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 400
+      }
+
+      "must throw UpstreamErrorResponse when stub returns 500 Internal Server Error" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(500).withHeader("Content-Type", "application/json").withBody("""{"message":"Unexpected error"}""")))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        val result = connector.getCisPenaltyAllowed(request).failed.futureValue
+        result mustBe an[UpstreamErrorResponse]
+        result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 500
+      }
+
+      "must fail when stub returns 200 OK with invalid JSON" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody("""{"unexpected":"shape"}""")))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        val result = connector.getCisPenaltyAllowed(request).failed.futureValue
+        result mustBe a[JsValidationException]
+      }
+
+      "must make POST request to correct endpoint" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getCisPenaltyAllowedResponseJson.toString())))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        connector.getCisPenaltyAllowed(request).futureValue
+        server.verify(1, postRequestedFor(urlPathEqualTo(getCisPenaltyAllowedPath)))
+      }
+
+      "must include correct headers in the request" in {
+        server.stubFor(post(urlPathEqualTo(getCisPenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getCisPenaltyAllowedResponseJson.toString())))
+        val request = getCisPenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+        connector.getCisPenaltyAllowed(request).futureValue
+        server.verify(postRequestedFor(urlPathEqualTo(getCisPenaltyAllowedPath)).withHeader("Content-Type", containing("application/json")))
+      }
+    }
+
+    // PAYE
     "getPayeAppealablePenalties" - {
 
       val penaltiesRequestJson = Json.obj(
@@ -498,6 +567,74 @@ class CisPayePasConnectorISpec
         connector.getPayeAppealablePenalty(request).futureValue
         server.verify(postRequestedFor(urlPathEqualTo(getPayeAppealablePenaltyPath)).withHeader("Content-Type", containing("application/json")))
       }
+    }
+  }
+
+  "getPayePenaltyAllowed()" - {
+
+    val getPayePenaltyAllowedRequestJson = Json.obj(
+      "districtNumber" -> 1L,
+      "employerReference" -> "HDZ",
+      "uniqueId" -> 1L
+    )
+    val getPayePenaltyAllowedResponseJson: JsValue = Json.obj(
+      "allowed" -> true
+    )
+
+    val getPayePenaltyAllowedPath = "/cis-paye-penalties-and-appeals/paye/penalties/access-allowed"
+
+    "must return GetCisTaxpayerResponse when the stub returns 200 OK" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).withRequestBody(equalToJson(getPayePenaltyAllowedRequestJson.toString())).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getPayePenaltyAllowedResponseJson.toString())))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      val result = connector.getPayePenaltyAllowed(request).futureValue
+      result.allowed mustBe true
+      server.verify(postRequestedFor(urlPathEqualTo(getPayePenaltyAllowedPath)).withRequestBody(equalToJson(getPayePenaltyAllowedRequestJson.toString())))
+    }
+
+    "must throw UpstreamErrorResponse with status 404 when stub returns 404 Not Found" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(404).withHeader("Content-Type", "application/json").withBody("""{"message":"CIS taxpayer not found"}""")))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      val result = connector.getPayePenaltyAllowed(request).failed.futureValue
+      result mustBe an[UpstreamErrorResponse]
+      result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 404
+      result.getMessage must include("CIS taxpayer not found")
+    }
+
+    "must throw UpstreamErrorResponse when stub returns 400 Bad Request" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(400).withHeader("Content-Type", "application/json").withBody("""{"message":"Invalid payload","errors":{}}""")))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      val result = connector.getPayePenaltyAllowed(request).failed.futureValue
+      result mustBe an[UpstreamErrorResponse]
+      result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 400
+    }
+
+    "must throw UpstreamErrorResponse when stub returns 500 Internal Server Error" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(500).withHeader("Content-Type", "application/json").withBody("""{"message":"Unexpected error"}""")))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      val result = connector.getPayePenaltyAllowed(request).failed.futureValue
+      result mustBe an[UpstreamErrorResponse]
+      result.asInstanceOf[UpstreamErrorResponse].statusCode mustBe 500
+    }
+
+    "must fail when stub returns 200 OK with invalid JSON" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody("""{"unexpected":"shape"}""")))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      val result = connector.getPayePenaltyAllowed(request).failed.futureValue
+      result mustBe a[JsValidationException]
+    }
+
+    "must make POST request to correct endpoint" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getPayePenaltyAllowedResponseJson.toString())))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      connector.getPayePenaltyAllowed(request).futureValue
+      server.verify(1, postRequestedFor(urlPathEqualTo(getPayePenaltyAllowedPath)))
+    }
+
+    "must include correct headers in the request" in {
+      server.stubFor(post(urlPathEqualTo(getPayePenaltyAllowedPath)).willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody(getPayePenaltyAllowedResponseJson.toString())))
+      val request = getPayePenaltyAllowedRequestJson.as[GetPenaltyAllowedRequest]
+      connector.getPayePenaltyAllowed(request).futureValue
+      server.verify(postRequestedFor(urlPathEqualTo(getPayePenaltyAllowedPath)).withHeader("Content-Type", containing("application/json")))
     }
   }
 }
